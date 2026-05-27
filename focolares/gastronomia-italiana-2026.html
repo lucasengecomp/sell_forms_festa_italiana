@@ -519,14 +519,16 @@
         })
       })
       .then(function() {
-        var msg = montarMensagemWA(nome, telefone, adultos, pagantes, gratuitas, qtd, valor);
-        window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
-
-        mostrarFeedback('success', 'Inscrição enviada! A mensagem de confirmação foi aberta no WhatsApp.');
-
-        document.getElementById('inscricao').reset();
-        document.querySelectorAll('.qty-input').forEach(function(i) { i.value = 0; });
-        atualizarTotais();
+        var params = new URLSearchParams({
+          nome:      nome,
+          telefone:  telefone,
+          adultos:   adultos,
+          pagantes:  pagantes,
+          gratuitas: gratuitas,
+          qtd:       qtd,
+          valor:     valor
+        });
+        window.location.href = 'confirmacao.html?' + params.toString();
       })
       .catch(function() {
         mostrarFeedback('error', 'Falha ao enviar. Verifique sua conexão e tente novamente.');

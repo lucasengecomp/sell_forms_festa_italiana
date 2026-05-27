@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscrição Confirmada — Festa da Gastronomia Italiana 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5ede0;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.10);
+      max-width: 500px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #1a5c38;
+      padding: 2rem 1.75rem 1.75rem;
+      color: #fff;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: .3rem;
+    }
+
+    .header p {
+      font-size: .9rem;
+      opacity: .8;
+    }
+
+    .body {
+      padding: 2rem 1.75rem;
+      text-align: center;
+    }
+
+    .check-circle {
+      width: 72px;
+      height: 72px;
+      background: #d1fae5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+
+    .check-circle svg {
+      width: 38px;
+      height: 38px;
+    }
+
+    .titulo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #065f46;
+      margin-bottom: .4rem;
+    }
+
+    .subtitulo {
+      font-size: .95rem;
+      color: #6b7280;
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+
+    .summary {
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 1.125rem 1.25rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .summary-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: .875rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .9rem;
+      color: #6b7280;
+      padding: .25rem 0;
+    }
+
+    .summary-row .label {
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .summary-row.total-row {
+      border-top: 1px solid #e5e7eb;
+      margin-top: .625rem;
+      padding-top: .75rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .summary-row.total-row .amount {
+      color: #1a5c38;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      margin: .5rem 0 1rem;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      width: 100%;
+      padding: .875rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, transform .1s;
+      margin-bottom: .75rem;
+    }
+
+    .btn:active { transform: scale(.98); }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: #fff;
+    }
+    .btn-whatsapp:hover { background: #1ebe5d; }
+
+    .btn-outline {
+      background: #fff;
+      color: #1a5c38;
+      border: 1.5px solid #1a5c38;
+    }
+    .btn-outline:hover { background: #f0faf5; }
+
+    .footer-note {
+      font-size: .8rem;
+      color: #9ca3af;
+      margin-top: .5rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>Festa da Gastronomia Italiana 2026</h1>
+      <p>Focolares &mdash; Confirmação de Inscrição</p>
+    </div>
+
+    <div class="body">
+      <div class="check-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+
+      <p class="titulo">Inscrição confirmada!</p>
+      <p class="subtitulo" id="msg-subtitulo">Seus dados foram registrados com sucesso.</p>
+
+      <div class="summary">
+        <p class="summary-title">Resumo</p>
+        <div class="summary-row">
+          <span class="label">Nome</span>
+          <span id="r-nome">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Telefone</span>
+          <span id="r-telefone">—</span>
+        </div>
+        <hr class="divider">
+        <div class="summary-row" id="row-adultos">
+          <span class="label">Adultos</span>
+          <span id="r-adultos">—</span>
+        </div>
+        <div class="summary-row" id="row-pagantes">
+          <span class="label">Crianças pagantes</span>
+          <span id="r-pagantes">—</span>
+        </div>
+        <div class="summary-row" id="row-gratuitas">
+          <span class="label">Crianças não pagantes</span>
+          <span id="r-gratuitas">—</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Total (<span id="r-qtd">0</span> convites)</span>
+          <span class="amount" id="r-valor">R$&nbsp;0,00</span>
+        </div>
+      </div>
+
+      <a id="btn-wa" class="btn btn-whatsapp" href="#" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Enviar confirmação pelo WhatsApp
+      </a>
+
+      <a href="gastronomia-italiana-2026.html" class="btn btn-outline">
+        Nova inscrição
+      </a>
+
+      <p class="footer-note">Guarde este resumo. Em caso de dúvidas, entre em contato pelo WhatsApp.</p>
+    </div>
+  </div>
+
+  <script>
+    var WA_NUMBER = '5511987529809';
+
+    function brl(n) {
+      return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function hideRowIfZero(rowId, value) {
+      if (value === 0) {
+        document.getElementById(rowId).style.display = 'none';
+      }
+    }
+
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+
+      var nome      = params.get('nome')      || '';
+      var telefone  = params.get('telefone')  || '';
+      var adultos   = parseInt(params.get('adultos'),   10) || 0;
+      var pagantes  = parseInt(params.get('pagantes'),  10) || 0;
+      var gratuitas = parseInt(params.get('gratuitas'), 10) || 0;
+      var qtd       = parseInt(params.get('qtd'),       10) || (adultos + pagantes + gratuitas);
+      var valor     = parseFloat(params.get('valor'))       || 0;
+
+      if (nome) {
+        document.getElementById('r-nome').textContent     = nome;
+        document.getElementById('r-telefone').textContent = telefone || '—';
+        document.getElementById('r-adultos').textContent  = adultos + (adultos === 1 ? ' convite' : ' convites');
+        document.getElementById('r-pagantes').textContent = pagantes + (pagantes === 1 ? ' convite' : ' convites');
+        document.getElementById('r-gratuitas').textContent = gratuitas + (gratuitas === 1 ? ' convite' : ' convites');
+        document.getElementById('r-qtd').textContent      = qtd;
+        document.getElementById('r-valor').textContent    = brl(valor);
+
+        hideRowIfZero('row-adultos',   adultos);
+        hideRowIfZero('row-pagantes',  pagantes);
+        hideRowIfZero('row-gratuitas', gratuitas);
+
+        document.getElementById('msg-subtitulo').textContent =
+          'Obrigado, ' + nome.split(' ')[0] + '! Seus dados foram registrados com sucesso.';
+
+        // Monta mensagem WhatsApp
+        var PRECO = { adulto: 165, criancaPagante: 85 };
+        var msg = [
+          '*Inscrição — Festa da Gastronomia Italiana 2026*',
+          '',
+          'Nome: ' + nome,
+          'Telefone: ' + telefone,
+          '',
+          'Convites:',
+          adultos   > 0 ? '  Adulto: '            + adultos   + ' × ' + brl(PRECO.adulto)         : null,
+          pagantes  > 0 ? '  Criança pagante: '   + pagantes  + ' × ' + brl(PRECO.criancaPagante) : null,
+          gratuitas > 0 ? '  Criança não pagante: ' + gratuitas                                   : null,
+          '',
+          'Total: ' + qtd + ' convite' + (qtd !== 1 ? 's' : ''),
+          'Valor total: ' + brl(valor),
+        ].filter(function(l) { return l !== null; }).join('\n');
+
+        document.getElementById('btn-wa').href =
+          'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg);
+      }
+    })();
+  </script>
+</body>
+</html>
