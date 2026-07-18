@@ -305,7 +305,7 @@
         <div class="qty-row">
           <span class="qty-label">
             Adulto
-            <span class="price-tag">R$&nbsp;165,00 / convite</span>
+            <span class="price-tag" id="preco-adulto">R$&nbsp;165,00 / convite</span>
           </span>
           <div class="qty-control">
             <button type="button" class="qty-btn" data-target="adultos" data-op="-">&#8722;</button>
@@ -317,7 +317,7 @@
         <div class="qty-row">
           <span class="qty-label">
             Criança pagante
-            <span class="price-tag">R$&nbsp;85,00 / convite</span>
+            <span class="price-tag" id="preco-crianca">R$&nbsp;85,00 / convite</span>
           </span>
           <div class="qty-control">
             <button type="button" class="qty-btn" data-target="criancas_pagantes" data-op="-">&#8722;</button>
@@ -353,6 +353,8 @@
           </div>
         </div>
 
+        <div class="field-error" id="qtd-error"></div>
+
         <button type="submit" class="submit-btn" id="submit-btn">
           Confirmar inscrição
         </button>
@@ -363,11 +365,10 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script>
     // ── Configuração ─────────────────────────────────────────────────────────
     var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQtMEUDkdb0s6OGlBN-0LED8ImgMVWwK3l-7nvrYXI3_pWDKBgObIiX_j2NNveUJ1s/exec';
-    var WA_NUMBER  = '5511987529809';
-    var PRECO      = { adulto: 165, criancaPagante: 85 };
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     function brl(n) {
@@ -377,6 +378,9 @@
     function getInt(id) {
       return Math.max(0, parseInt(document.getElementById(id).value, 10) || 0);
     }
+
+    document.getElementById('preco-adulto').textContent  = brl(PRECO.adulto) + ' / convite';
+    document.getElementById('preco-crianca').textContent = brl(PRECO.criancaPagante) + ' / convite';
 
     // ── Cálculo de totais ────────────────────────────────────────────────────
     function atualizarTotais() {
@@ -393,6 +397,8 @@
       document.getElementById('subtotal-criancas').textContent = brl(subC);
       document.getElementById('qtd-total').textContent         = qtd;
       document.getElementById('valor-total').textContent       = brl(total);
+
+      if (qtd > 0) document.getElementById('qtd-error').textContent = '';
     }
 
     // ── Botões +/− ───────────────────────────────────────────────────────────
@@ -410,8 +416,13 @@
     });
 
     // ── Máscara de telefone ──────────────────────────────────────────────────
-    document.getElementById('telefone').addEventListener('input', function() {
-      var d = this.value.replace(/\D/g, '').slice(0, 11);
+    document.getElementById('telefone').addEventListener('input', function(e) {
+      // Não reformatar ao apagar, senão o backspace num caractere de
+      // formatação ("-", ")") é desfeito imediatamente.
+      if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') return;
+      var d = this.value.replace(/\D/g, '');
+      if (d.length > 11 && d.indexOf('55') === 0) d = d.slice(2);
+      d = d.slice(0, 11);
       var r = '';
       if (d.length >= 1)  r = '(' + d.slice(0, 2);
       if (d.length >= 3)  r += ') ' + d.slice(2, d.length <= 10 ? 6 : 7);
@@ -448,29 +459,13 @@
 
       var qtdTotal = getInt('adultos') + getInt('criancas_pagantes') + getInt('criancas_nao_pagantes');
       if (qtdTotal === 0) {
-        mostrarFeedback('error', 'Selecione ao menos 1 convite para continuar.');
+        document.getElementById('qtd-error').textContent = 'Selecione ao menos 1 convite para continuar.';
         ok = false;
+      } else {
+        document.getElementById('qtd-error').textContent = '';
       }
 
       return ok;
-    }
-
-    // ── Mensagem WhatsApp ────────────────────────────────────────────────────
-    function montarMensagemWA(nome, telefone, adultos, pagantes, gratuitas, qtd, valor) {
-      return [
-        '*Inscrição — Festa da Gastronomia Italiana 2026*',
-        '',
-        'Nome: ' + nome,
-        'Telefone: ' + telefone,
-        '',
-        'Convites:',
-        '  Adulto: ' + adultos + ' × ' + brl(PRECO.adulto),
-        '  Criança pagante: ' + pagantes + ' × ' + brl(PRECO.criancaPagante),
-        '  Criança não pagante: ' + gratuitas,
-        '',
-        'Total: ' + qtd + ' convite' + (qtd !== 1 ? 's' : ''),
-        'Valor total: ' + brl(valor),
-      ].join('\n');
     }
 
     // ── Feedback ─────────────────────────────────────────────────────────────
@@ -504,21 +499,25 @@
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div> Enviando…';
 
+      // Sem Content-Type explícito o corpo vai como text/plain (requisição
+      // "simples"), e o Apps Script responde com Access-Control-Allow-Origin: *,
+      // permitindo ler a resposta e detectar falhas de gravação de verdade.
       fetch(SCRIPT_URL, {
         method: 'POST',
-        mode:   'no-cors',
         body:   JSON.stringify({
           nome:                  nome,
           telefone:              telefone,
           adultos:               adultos,
           criancas_pagantes:     pagantes,
-          criancas_nao_pagantes: gratuitas,
-          total_convites:        qtd,
-          total_valor:           valor,
-          timestamp:             new Date().toISOString()
+          criancas_nao_pagantes: gratuitas
         })
       })
-      .then(function() {
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(resp) {
+        if (resp.status !== 'ok') throw new Error(resp.message || 'Erro no servidor.');
         var params = new URLSearchParams({
           nome:      nome,
           telefone:  telefone,
@@ -531,9 +530,7 @@
         window.location.href = 'confirmacao.html?' + params.toString();
       })
       .catch(function() {
-        mostrarFeedback('error', 'Falha ao enviar. Verifique sua conexão e tente novamente.');
-      })
-      .finally(function() {
+        mostrarFeedback('error', 'Não foi possível registrar sua inscrição. Verifique sua conexão e tente novamente.');
         btn.disabled = false;
         btn.textContent = 'Confirmar inscrição';
       });

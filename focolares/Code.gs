@@ -3,13 +3,21 @@
 //   Executar como: Eu mesmo
 //   Quem tem acesso: Qualquer pessoa
 // Copie a URL gerada e cole em SCRIPT_URL no HTML.
+// IMPORTANTE: após alterar este arquivo, reimplante como NOVA VERSÃO.
+
+// Manter em sincronia com config.js
+var PRECO = { adulto: 165, criancaPagante: 85 };
+var SHEET_NAME = 'Inscrições';
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(5000);
+  if (!lock.tryLock(10000)) {
+    return jsonResponse({ status: 'error', message: 'Servidor ocupado. Tente novamente em instantes.' });
+  }
 
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
 
     if (sheet.getLastRow() === 0) {
       sheet.appendRow([
@@ -26,27 +34,43 @@ function doPost(e) {
 
     var data = JSON.parse(e.postData.contents);
 
+    var adultos   = toQty(data.adultos);
+    var pagantes  = toQty(data.criancas_pagantes);
+    var gratuitas = toQty(data.criancas_nao_pagantes);
+
+    if (adultos + pagantes + gratuitas === 0) {
+      return jsonResponse({ status: 'error', message: 'Nenhum convite selecionado.' });
+    }
+
     sheet.appendRow([
-      new Date(data.timestamp || Date.now()),
-      data.nome              || '',
-      data.telefone          || '',
-      Number(data.adultos)               || 0,
-      Number(data.criancas_pagantes)     || 0,
-      Number(data.criancas_nao_pagantes) || 0,
-      Number(data.total_convites)        || 0,
-      Number(data.total_valor)           || 0
+      new Date(),
+      String(data.nome || ''),
+      String(data.telefone || ''),
+      adultos,
+      pagantes,
+      gratuitas,
+      adultos + pagantes + gratuitas,
+      adultos * PRECO.adulto + pagantes * PRECO.criancaPagante
     ]);
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ status: 'ok' }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ status: 'ok' });
 
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ status: 'error', message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ status: 'error', message: String(err) });
 
   } finally {
     lock.releaseLock();
   }
+}
+
+function toQty(v) {
+  var n = parseInt(v, 10);
+  if (isNaN(n) || n < 0) return 0;
+  return Math.min(n, 99);
+}
+
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }

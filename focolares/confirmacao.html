@@ -231,9 +231,8 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script>
-    var WA_NUMBER = '5511987529809';
-
     function brl(n) {
       return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
@@ -272,7 +271,6 @@
           'Obrigado, ' + nome.split(' ')[0] + '! Seus dados foram registrados com sucesso.';
 
         // Monta mensagem WhatsApp
-        var PRECO = { adulto: 165, criancaPagante: 85 };
         var msg = [
           '*Inscrição — Festa da Gastronomia Italiana 2026*',
           '',
