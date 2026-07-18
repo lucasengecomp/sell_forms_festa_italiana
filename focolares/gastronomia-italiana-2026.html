@@ -189,6 +189,45 @@
     }
     input[type=number] { -moz-appearance: textfield; }
 
+    .pay-option {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
+      padding: .875rem 1rem;
+      margin-bottom: .625rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+
+    .pay-option:hover { background: #f9fafb; }
+
+    .pay-option:has(input:checked) {
+      border-color: #1a5c38;
+      background: #f0faf5;
+    }
+
+    .pay-option input {
+      margin-top: .2rem;
+      accent-color: #1a5c38;
+      flex-shrink: 0;
+    }
+
+    .pay-option .pay-title {
+      display: block;
+      font-size: .9rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .pay-option .pay-desc {
+      display: block;
+      font-size: .78rem;
+      color: #6b7280;
+      margin-top: .1rem;
+    }
+
     .summary {
       background: #f9fafb;
       border: 1.5px solid #e5e7eb;
@@ -338,6 +377,35 @@
           </div>
         </div>
 
+        <hr class="divider">
+
+        <p class="section-label">Forma de pagamento</p>
+
+        <div id="pagamento-opcoes">
+          <label class="pay-option">
+            <input type="radio" name="pagamento" value="pix">
+            <span>
+              <span class="pay-title">PIX</span>
+              <span class="pay-desc">QR Code com o valor exato na próxima tela</span>
+            </span>
+          </label>
+          <label class="pay-option">
+            <input type="radio" name="pagamento" value="cartao">
+            <span>
+              <span class="pay-title">Cartão de crédito</span>
+              <span class="pay-desc">Você receberá o link de pagamento pelo WhatsApp</span>
+            </span>
+          </label>
+          <label class="pay-option">
+            <input type="radio" name="pagamento" value="balcao">
+            <span>
+              <span class="pay-title">Balcão da Padaria Espiga Dourada</span>
+              <span class="pay-desc">Somente para quem está na padaria neste momento</span>
+            </span>
+          </label>
+        </div>
+        <div class="field-error" id="pagamento-error"></div>
+
         <div class="summary">
           <div class="summary-row">
             <span>Adultos</span>
@@ -415,6 +483,12 @@
       input.addEventListener('input', atualizarTotais);
     });
 
+    document.querySelectorAll('input[name="pagamento"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        document.getElementById('pagamento-error').textContent = '';
+      });
+    });
+
     // ── Máscara de telefone ──────────────────────────────────────────────────
     document.getElementById('telefone').addEventListener('input', function(e) {
       // Não reformatar ao apagar, senão o backspace num caractere de
@@ -465,6 +539,15 @@
         document.getElementById('qtd-error').textContent = '';
       }
 
+      var valorTotal = getInt('adultos') * PRECO.adulto + getInt('criancas_pagantes') * PRECO.criancaPagante;
+      var pagSel = document.querySelector('input[name="pagamento"]:checked');
+      if (valorTotal > 0 && !pagSel) {
+        document.getElementById('pagamento-error').textContent = 'Escolha a forma de pagamento.';
+        ok = false;
+      } else {
+        document.getElementById('pagamento-error').textContent = '';
+      }
+
       return ok;
     }
 
@@ -494,6 +577,8 @@
       var valor     = adultos * PRECO.adulto + pagantes * PRECO.criancaPagante;
       var nome      = document.getElementById('nome').value.trim();
       var telefone  = document.getElementById('telefone').value.trim();
+      var pagSel    = document.querySelector('input[name="pagamento"]:checked');
+      var pagamento = valor === 0 ? 'isento' : pagSel.value;
 
       var btn = document.getElementById('submit-btn');
       btn.disabled = true;
@@ -509,7 +594,8 @@
           telefone:              telefone,
           adultos:               adultos,
           criancas_pagantes:     pagantes,
-          criancas_nao_pagantes: gratuitas
+          criancas_nao_pagantes: gratuitas,
+          forma_pagamento:       pagamento
         })
       })
       .then(function(res) {
@@ -525,7 +611,8 @@
           pagantes:  pagantes,
           gratuitas: gratuitas,
           qtd:       qtd,
-          valor:     valor
+          valor:     valor,
+          pagamento: pagamento
         });
         window.location.href = 'confirmacao.html?' + params.toString();
       })

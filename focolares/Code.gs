@@ -8,6 +8,12 @@
 // Manter em sincronia com config.js
 var PRECO = { adulto: 165, criancaPagante: 85 };
 var SHEET_NAME = 'Inscrições';
+var FORMAS_PAGAMENTO = {
+  pix:    'PIX',
+  cartao: 'Cartão de crédito',
+  balcao: 'Balcão — Padaria Espiga Dourada',
+  isento: 'Isento (sem valor a pagar)'
+};
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -28,8 +34,12 @@ function doPost(e) {
         'Crianças Pagantes',
         'Crianças Não Pagantes',
         'Total Convites',
-        'Total Valor (R$)'
+        'Total Valor (R$)',
+        'Forma de Pagamento'
       ]);
+    } else if (sheet.getRange(1, 9).getValue() === '') {
+      // Planilhas criadas antes da coluna de pagamento
+      sheet.getRange(1, 9).setValue('Forma de Pagamento');
     }
 
     var data = JSON.parse(e.postData.contents);
@@ -42,6 +52,12 @@ function doPost(e) {
       return jsonResponse({ status: 'error', message: 'Nenhum convite selecionado.' });
     }
 
+    var totalValor = adultos * PRECO.adulto + pagantes * PRECO.criancaPagante;
+    var pagamento = totalValor === 0 ? 'isento' : String(data.forma_pagamento || '');
+    if (!FORMAS_PAGAMENTO[pagamento]) {
+      return jsonResponse({ status: 'error', message: 'Forma de pagamento inválida.' });
+    }
+
     sheet.appendRow([
       new Date(),
       String(data.nome || ''),
@@ -50,7 +66,8 @@ function doPost(e) {
       pagantes,
       gratuitas,
       adultos + pagantes + gratuitas,
-      adultos * PRECO.adulto + pagantes * PRECO.criancaPagante
+      totalValor,
+      FORMAS_PAGAMENTO[pagamento]
     ]);
 
     return jsonResponse({ status: 'ok' });
