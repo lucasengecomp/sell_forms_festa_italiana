@@ -6,7 +6,7 @@
 // IMPORTANTE: após alterar este arquivo, reimplante como NOVA VERSÃO.
 
 // Manter em sincronia com config.js
-var PRECO = { adulto: 165, criancaPagante: 85 };
+var PRECO = { adulto: 185, criancaPagante: 85 };
 var SHEET_NAME = 'Inscrições';
 var FORMAS_PAGAMENTO = {
   pix:    'PIX',
