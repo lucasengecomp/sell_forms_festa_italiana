@@ -3,6 +3,7 @@
 // Manter PRECO em sincronia com Code.gs (o servidor recalcula os totais).
 var WA_NUMBER = '5511987529809';
 var PRECO = { adulto: 175, criancaPagante: 90 };
+var MAX_PARCELAS = 3;
 
 // Dados do recebedor PIX (limites do BR Code: nome 25 chars, cidade 15 chars)
 var PIX = {

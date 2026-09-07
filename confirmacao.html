@@ -301,7 +301,11 @@
 
       <div class="pay-box" id="cartao-box">
         <p class="pay-box-title">Pagamento com cartão de crédito</p>
-        <p class="pay-box-note">Você receberá no seu WhatsApp o link de pagamento com o valor exato da sua inscrição. Toque no botão abaixo para confirmar seus dados e agilizar o envio do link.</p>
+        <p class="pay-box-note" id="cartao-desc">Toque no botão abaixo para pagar em ambiente seguro do Asaas.</p>
+        <a id="btn-cartao" class="btn btn-whatsapp" href="#" target="_blank" rel="noopener" style="background:#1a5c38;margin-top:.5rem;">
+          Pagar agora
+        </a>
+        <p class="pay-box-note" id="cartao-fallback" style="display:none;">Não conseguimos gerar o link automaticamente. Envie a confirmação pelo WhatsApp que enviaremos o link de pagamento manualmente.</p>
       </div>
 
       <div class="pay-box" id="balcao-box">
@@ -324,7 +328,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=5"></script>
+  <script src="config.js?v=7"></script>
   <script src="qrcode.min.js"></script>
   <script>
     function brl(n) {
@@ -450,6 +454,20 @@
           });
         } else if (valor > 0 && pagamento === 'cartao') {
           document.getElementById('cartao-box').style.display = 'block';
+          var paymentUrl   = params.get('paymentUrl');
+          var paymentError = params.get('paymentError');
+          var parcelas     = parseInt(params.get('parcelas'), 10) || 1;
+          var btnCartao    = document.getElementById('btn-cartao');
+          if (paymentUrl) {
+            btnCartao.href = paymentUrl;
+            btnCartao.textContent = 'Pagar ' + brl(valor) + (parcelas > 1 ? ' em ' + parcelas + 'x' : ' à vista');
+            document.getElementById('cartao-desc').textContent =
+              'Toque no botão abaixo para pagar em ambiente seguro do Asaas. Você pode voltar aqui a qualquer momento pelo link acima.';
+          } else {
+            btnCartao.style.display = 'none';
+            document.getElementById('cartao-desc').style.display = 'none';
+            document.getElementById('cartao-fallback').style.display = 'block';
+          }
         } else if (valor > 0 && pagamento === 'balcao') {
           document.getElementById('balcao-box').style.display = 'block';
         }

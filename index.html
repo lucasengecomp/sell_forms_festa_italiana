@@ -231,6 +231,46 @@
       margin-top: .1rem;
     }
 
+    .parcelas-box {
+      display: none;
+      margin: -.25rem 0 .625rem 2rem;
+      padding: .625rem .75rem;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+    .parcelas-box label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: .35rem;
+    }
+
+    .parcelas-box select,
+    .parcelas-box input {
+      width: 100%;
+      padding: .5rem .625rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .9rem;
+      color: #111827;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .parcelas-box select:focus,
+    .parcelas-box input:focus {
+      outline: none;
+      border-color: #1a5c38;
+      box-shadow: 0 0 0 3px rgba(26,92,56,.12);
+    }
+
+    .parcelas-box input.invalid {
+      border-color: #dc2626;
+    }
+
     .summary {
       background: #f9fafb;
       border: 1.5px solid #e5e7eb;
@@ -396,9 +436,16 @@
             <input type="radio" name="pagamento" value="cartao">
             <span>
               <span class="pay-title">Cartão de crédito</span>
-              <span class="pay-desc">Você receberá o link de pagamento pelo WhatsApp</span>
+              <span class="pay-desc">Pague na hora pelo link seguro do Asaas (até 3x sem juros)</span>
             </span>
           </label>
+          <div class="parcelas-box" id="cartao-extras-box">
+            <label for="cpf">CPF do pagador</label>
+            <input type="text" id="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14">
+            <div class="field-error" id="cpf-error"></div>
+            <label for="parcelas" style="margin-top:.5rem;">Parcelas</label>
+            <select id="parcelas"></select>
+          </div>
           <label class="pay-option">
             <input type="radio" name="pagamento" value="balcao">
             <span>
@@ -436,7 +483,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=5"></script>
+  <script src="config.js?v=7"></script>
   <script>
     // ── Configuração ─────────────────────────────────────────────────────────
     var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr9zmPOw-jemxDtZ0UFNcP5sskT1vjFQ1Hm456KRV6TYbghies6M_3E2FLYyAKWNmIKg/exec';
@@ -470,6 +517,32 @@
       document.getElementById('valor-total').textContent       = brl(total);
 
       if (qtd > 0) document.getElementById('qtd-error').textContent = '';
+
+      atualizarParcelas(total);
+      atualizarVisibilidadeParcelas();
+    }
+
+    // ── Parcelas (cartão) ────────────────────────────────────────────────────
+    function atualizarParcelas(total) {
+      var sel = document.getElementById('parcelas');
+      var atual = parseInt(sel.value, 10) || 1;
+      sel.innerHTML = '';
+      for (var n = 1; n <= MAX_PARCELAS; n++) {
+        var opt = document.createElement('option');
+        opt.value = String(n);
+        // Asaas distribui centavos entre parcelas; aqui só mostramos referência
+        var porParcela = total / n;
+        opt.textContent = n + 'x de ' + brl(porParcela) + ' (sem juros)';
+        sel.appendChild(opt);
+      }
+      sel.value = String(Math.min(atual, MAX_PARCELAS));
+    }
+
+    function atualizarVisibilidadeParcelas() {
+      var pag = document.querySelector('input[name="pagamento"]:checked');
+      var box = document.getElementById('cartao-extras-box');
+      var total = getInt('adultos') * PRECO.adulto + getInt('criancas_pagantes') * PRECO.criancaPagante;
+      box.style.display = (pag && pag.value === 'cartao' && total > 0) ? 'block' : 'none';
     }
 
     // ── Botões +/− ───────────────────────────────────────────────────────────
@@ -486,11 +559,40 @@
       input.addEventListener('input', atualizarTotais);
     });
 
+    atualizarTotais();
+
     document.querySelectorAll('input[name="pagamento"]').forEach(function(radio) {
       radio.addEventListener('change', function() {
         document.getElementById('pagamento-error').textContent = '';
+        atualizarVisibilidadeParcelas();
       });
     });
+
+    // ── Máscara de CPF ───────────────────────────────────────────────────────
+    document.getElementById('cpf').addEventListener('input', function(e) {
+      if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') return;
+      var d = this.value.replace(/\D/g, '').slice(0, 11);
+      var r = d;
+      if (d.length > 3)  r = d.slice(0,3) + '.' + d.slice(3);
+      if (d.length > 6)  r = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
+      if (d.length > 9)  r = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
+      this.value = r;
+    });
+
+    // ── Validação de CPF (dígitos verificadores) ─────────────────────────────
+    function cpfValido(cpf) {
+      var d = String(cpf || '').replace(/\D/g, '');
+      if (d.length !== 11) return false;
+      if (/^(\d)\1{10}$/.test(d)) return false;
+      for (var t = 9; t < 11; t++) {
+        var soma = 0;
+        for (var i = 0; i < t; i++) soma += parseInt(d.charAt(i), 10) * ((t + 1) - i);
+        var dv = (soma * 10) % 11;
+        if (dv === 10) dv = 0;
+        if (dv !== parseInt(d.charAt(t), 10)) return false;
+      }
+      return true;
+    }
 
     // ── Máscara de telefone ──────────────────────────────────────────────────
     document.getElementById('telefone').addEventListener('input', function(e) {
@@ -551,6 +653,21 @@
         document.getElementById('pagamento-error').textContent = '';
       }
 
+      var cpfInput = document.getElementById('cpf');
+      if (valorTotal > 0 && pagSel && pagSel.value === 'cartao') {
+        if (!cpfValido(cpfInput.value)) {
+          cpfInput.classList.add('invalid');
+          document.getElementById('cpf-error').textContent = 'Informe um CPF válido para pagamento com cartão.';
+          ok = false;
+        } else {
+          cpfInput.classList.remove('invalid');
+          document.getElementById('cpf-error').textContent = '';
+        }
+      } else {
+        cpfInput.classList.remove('invalid');
+        document.getElementById('cpf-error').textContent = '';
+      }
+
       return ok;
     }
 
@@ -582,6 +699,12 @@
       var telefone  = document.getElementById('telefone').value.trim();
       var pagSel    = document.querySelector('input[name="pagamento"]:checked');
       var pagamento = valor === 0 ? 'isento' : pagSel.value;
+      var parcelas  = pagamento === 'cartao'
+        ? (parseInt(document.getElementById('parcelas').value, 10) || 1)
+        : 1;
+      var cpf       = pagamento === 'cartao'
+        ? document.getElementById('cpf').value.replace(/\D/g, '')
+        : '';
 
       var btn = document.getElementById('submit-btn');
       btn.disabled = true;
@@ -595,10 +718,12 @@
         body:   JSON.stringify({
           nome:                  nome,
           telefone:              telefone,
+          cpf:                   cpf,
           adultos:               adultos,
           criancas_pagantes:     pagantes,
           criancas_nao_pagantes: gratuitas,
-          forma_pagamento:       pagamento
+          forma_pagamento:       pagamento,
+          parcelas:              parcelas
         })
       })
       .then(function(res) {
@@ -617,6 +742,12 @@
           valor:     valor,
           pagamento: pagamento
         });
+        if (resp.paymentUrl) {
+          params.set('paymentUrl', resp.paymentUrl);
+          params.set('parcelas',   String(resp.parcelas || parcelas));
+        } else if (resp.paymentError) {
+          params.set('paymentError', '1');
+        }
         window.location.href = 'confirmacao.html?' + params.toString();
       })
       .catch(function() {
