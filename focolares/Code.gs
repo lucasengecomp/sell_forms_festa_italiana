@@ -22,6 +22,11 @@ var FORMAS_PAGAMENTO = {
   isento: 'Isento (sem valor a pagar)'
 };
 
+var DIAS_LABEL    = { sabado: 'Sábado',  domingo: 'Domingo' };
+var PREFIXOS_DIA  = { sabado: 'FGI_S_',  domingo: 'FGI_D_' };
+var COL_DIA       = 11;
+var COL_CODIGO    = 12;
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
@@ -43,15 +48,24 @@ function doPost(e) {
         'Total Convites',
         'Total Valor (R$)',
         'Forma de Pagamento',
-        'CPF'
+        'CPF',
+        'Dia',
+        'Código'
       ]);
     } else {
-      // Planilhas criadas antes das colunas Forma de Pagamento / CPF
-      if (sheet.getRange(1, 9).getValue()  === '') sheet.getRange(1, 9).setValue('Forma de Pagamento');
-      if (sheet.getRange(1, 10).getValue() === '') sheet.getRange(1, 10).setValue('CPF');
+      // Planilhas criadas antes das colunas Forma de Pagamento / CPF / Dia / Código
+      if (sheet.getRange(1, 9).getValue()          === '') sheet.getRange(1, 9).setValue('Forma de Pagamento');
+      if (sheet.getRange(1, 10).getValue()         === '') sheet.getRange(1, 10).setValue('CPF');
+      if (sheet.getRange(1, COL_DIA).getValue()    === '') sheet.getRange(1, COL_DIA).setValue('Dia');
+      if (sheet.getRange(1, COL_CODIGO).getValue() === '') sheet.getRange(1, COL_CODIGO).setValue('Código');
     }
 
     var data = JSON.parse(e.postData.contents);
+
+    var diaKey = classificarDia_(data.dia);
+    if (!diaKey) {
+      return jsonResponse({ status: 'error', message: 'Escolha em qual dia da festa você vai (Sábado ou Domingo).' });
+    }
 
     var adultos   = toQty(data.adultos);
     var pagantes  = toQty(data.criancas_pagantes);
@@ -76,6 +90,8 @@ function doPost(e) {
       return jsonResponse({ status: 'error', message: 'CPF inválido para pagamento com cartão.' });
     }
 
+    var codigo = proximoCodigoDia_(sheet, diaKey);
+
     sheet.appendRow([
       new Date(),
       nome,
@@ -86,9 +102,12 @@ function doPost(e) {
       adultos + pagantes + gratuitas,
       totalValor,
       FORMAS_PAGAMENTO[pagamento],
-      cpf || ''
+      cpf || '',
+      DIAS_LABEL[diaKey],
+      codigo
     ]);
 
+    // Código é interno (uso administrativo na planilha) — não vai na resposta.
     var resposta = { status: 'ok' };
 
     // Cartão: cria a cobrança no Asaas e devolve a URL de pagamento.
@@ -155,6 +174,90 @@ function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── Código identificador (para alocação de mesas, controle de entrada, etc.) ──
+// Formato: FGI_S_001 (sábado) / FGI_D_001 (domingo). Numeração sequencial por
+// dia, 3 dígitos. Preenchido no momento da inscrição, sob o mesmo lock do doPost.
+
+function classificarDia_(v) {
+  var s = String(v == null ? '' : v).trim().toLowerCase();
+  if (s === 'sabado' || s === 'sábado' || s === 's') return 'sabado';
+  if (s === 'domingo' || s === 'd') return 'domingo';
+  return null;
+}
+
+function proximoCodigoDia_(sheet, diaKey) {
+  var prefixo = PREFIXOS_DIA[diaKey];
+  var lastRow = sheet.getLastRow();
+  var max = 0;
+  if (lastRow >= 2) {
+    var codigos = sheet.getRange(2, COL_CODIGO, lastRow - 1, 1).getValues();
+    for (var i = 0; i < codigos.length; i++) {
+      var c = String(codigos[i][0] || '');
+      if (c.indexOf(prefixo) === 0) {
+        var n = parseInt(c.slice(prefixo.length), 10);
+        if (!isNaN(n) && n > max) max = n;
+      }
+    }
+  }
+  return prefixo + ('000' + (max + 1)).slice(-3);
+}
+
+// Rode UMA VEZ pelo editor do Apps Script para preencher a coluna "Código" das
+// linhas antigas. Antes, preencha manualmente a coluna "Dia" (col K) com
+// "Sábado" ou "Domingo" nas linhas existentes. Linhas sem Dia ficam sem código
+// e o total pulado é reportado no Logger.
+// A numeração respeita códigos já existentes (não sobrescreve) e usa a ordem
+// do Timestamp para atribuir os novos.
+function preencherCodigosExistentes() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error('Aba "' + SHEET_NAME + '" não encontrada.');
+
+  if (sheet.getRange(1, COL_DIA).getValue()    === '') sheet.getRange(1, COL_DIA).setValue('Dia');
+  if (sheet.getRange(1, COL_CODIGO).getValue() === '') sheet.getRange(1, COL_CODIGO).setValue('Código');
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { Logger.log('Sem linhas para preencher.'); return; }
+
+  var qtd        = lastRow - 1;
+  var timestamps = sheet.getRange(2, 1,          qtd, 1).getValues();
+  var dias       = sheet.getRange(2, COL_DIA,    qtd, 1).getValues();
+  var codigos    = sheet.getRange(2, COL_CODIGO, qtd, 1).getValues();
+
+  var maxPorDia = { sabado: 0, domingo: 0 };
+  for (var i = 0; i < qtd; i++) {
+    var c = String(codigos[i][0] || '');
+    ['sabado', 'domingo'].forEach(function(k) {
+      var p = PREFIXOS_DIA[k];
+      if (c.indexOf(p) === 0) {
+        var n = parseInt(c.slice(p.length), 10);
+        if (!isNaN(n) && n > maxPorDia[k]) maxPorDia[k] = n;
+      }
+    });
+  }
+
+  var ordem = [];
+  for (var i = 0; i < qtd; i++) ordem.push(i);
+  ordem.sort(function(a, b) {
+    var ta = new Date(timestamps[a][0]).getTime();
+    var tb = new Date(timestamps[b][0]).getTime();
+    return ta - tb;
+  });
+
+  var preenchidas = 0, puladas = 0;
+  ordem.forEach(function(rowIdx) {
+    if (codigos[rowIdx][0]) return;
+    var key = classificarDia_(dias[rowIdx][0]);
+    if (!key) { puladas++; return; }
+    maxPorDia[key]++;
+    codigos[rowIdx][0] = PREFIXOS_DIA[key] + ('000' + maxPorDia[key]).slice(-3);
+    preenchidas++;
+  });
+
+  sheet.getRange(2, COL_CODIGO, qtd, 1).setValues(codigos);
+  Logger.log('Códigos preenchidos: ' + preenchidas + '. Linhas puladas por falta de Dia: ' + puladas + '.');
 }
 
 // Rode ESTA função UMA VEZ pelo editor do Apps Script (botão Executar / Run).

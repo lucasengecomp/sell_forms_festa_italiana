@@ -124,6 +124,23 @@
       color: #1a5c38;
     }
 
+    .summary-row.dia-row {
+      font-size: 1rem;
+      padding: .35rem 0 .55rem;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: .35rem;
+    }
+
+    .summary-row.dia-row .label {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .summary-row.dia-row #r-dia {
+      color: #1a5c38;
+      font-weight: 700;
+    }
+
     .divider {
       border: none;
       border-top: 1px solid #f0f0f0;
@@ -257,6 +274,10 @@
 
       <div class="summary">
         <p class="summary-title">Resumo</p>
+        <div class="summary-row dia-row">
+          <span class="label">Dia da festa</span>
+          <span id="r-dia">—</span>
+        </div>
         <div class="summary-row">
           <span class="label">Nome</span>
           <span id="r-nome">—</span>
@@ -386,8 +407,11 @@
       var valor     = parseFloat(params.get('valor'))       || 0;
       var pagamento = params.get('pagamento') || '';
       var pagLabel  = FORMAS_PAGAMENTO[pagamento] || '';
+      var diaKey    = params.get('dia') || '';
+      var diaLabel  = diaKey === 'sabado' ? 'Sábado' : (diaKey === 'domingo' ? 'Domingo' : '');
 
       if (nome) {
+        document.getElementById('r-dia').textContent      = diaLabel || '—';
         document.getElementById('r-nome').textContent     = nome;
         document.getElementById('r-telefone').textContent = telefone || '—';
         document.getElementById('r-adultos').textContent  = adultos + (adultos === 1 ? ' convite' : ' convites');
@@ -408,6 +432,7 @@
         var msg = [
           '*Inscrição — Festa da Gastronomia Italiana 2026*',
           '',
+          diaLabel ? '*Dia: ' + diaLabel + '*' : null,
           'Nome: ' + nome,
           'Telefone: ' + telefone,
           '',

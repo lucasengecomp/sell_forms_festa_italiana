@@ -204,6 +204,40 @@
       transition: border-color .15s, background .15s;
     }
 
+    .day-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .625rem;
+    }
+
+    .day-option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
+      padding: .875rem 1rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: .95rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .day-option:hover { background: #f9fafb; }
+
+    .day-option:has(input:checked) {
+      border-color: #1a5c38;
+      background: #f0faf5;
+      color: #1a5c38;
+    }
+
+    .day-option input {
+      accent-color: #1a5c38;
+      flex-shrink: 0;
+    }
+
     .pay-option:hover { background: #f9fafb; }
 
     .pay-option:has(input:checked) {
@@ -379,6 +413,22 @@
           <input type="tel" id="telefone" autocomplete="tel" placeholder="(11) 99999-9999" inputmode="numeric">
           <div class="field-error" id="telefone-error"></div>
         </div>
+
+        <hr class="divider">
+
+        <p class="section-label">Dia do evento</p>
+
+        <div class="day-options">
+          <label class="day-option">
+            <input type="radio" name="dia" value="sabado">
+            <span>Sábado</span>
+          </label>
+          <label class="day-option">
+            <input type="radio" name="dia" value="domingo">
+            <span>Domingo</span>
+          </label>
+        </div>
+        <div class="field-error" id="dia-error"></div>
 
         <hr class="divider">
 
@@ -568,6 +618,12 @@
       });
     });
 
+    document.querySelectorAll('input[name="dia"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        document.getElementById('dia-error').textContent = '';
+      });
+    });
+
     // ── Máscara de CPF ───────────────────────────────────────────────────────
     document.getElementById('cpf').addEventListener('input', function(e) {
       if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') return;
@@ -636,6 +692,14 @@
         document.getElementById('telefone-error').textContent = '';
       }
 
+      var diaSel = document.querySelector('input[name="dia"]:checked');
+      if (!diaSel) {
+        document.getElementById('dia-error').textContent = 'Escolha em qual dia você vai à festa.';
+        ok = false;
+      } else {
+        document.getElementById('dia-error').textContent = '';
+      }
+
       var qtdTotal = getInt('adultos') + getInt('criancas_pagantes') + getInt('criancas_nao_pagantes');
       if (qtdTotal === 0) {
         document.getElementById('qtd-error').textContent = 'Selecione ao menos 1 convite para continuar.';
@@ -697,6 +761,7 @@
       var valor     = adultos * PRECO.adulto + pagantes * PRECO.criancaPagante;
       var nome      = document.getElementById('nome').value.trim();
       var telefone  = document.getElementById('telefone').value.trim();
+      var dia       = document.querySelector('input[name="dia"]:checked').value;
       var pagSel    = document.querySelector('input[name="pagamento"]:checked');
       var pagamento = valor === 0 ? 'isento' : pagSel.value;
       var parcelas  = pagamento === 'cartao'
@@ -719,6 +784,7 @@
           nome:                  nome,
           telefone:              telefone,
           cpf:                   cpf,
+          dia:                   dia,
           adultos:               adultos,
           criancas_pagantes:     pagantes,
           criancas_nao_pagantes: gratuitas,
@@ -740,7 +806,8 @@
           gratuitas: gratuitas,
           qtd:       qtd,
           valor:     valor,
-          pagamento: pagamento
+          pagamento: pagamento,
+          dia:       dia
         });
         if (resp.paymentUrl) {
           params.set('paymentUrl', resp.paymentUrl);
