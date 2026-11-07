@@ -227,6 +227,34 @@
 
     .day-option:hover { background: #f9fafb; }
 
+    .day-option-sold-out {
+      flex-direction: column;
+      gap: .3rem;
+      cursor: not-allowed;
+      background: #f9fafb;
+      color: #6b7280;
+    }
+
+    .day-option-sold-out:hover { background: #f9fafb; }
+
+    .day-option-sold-out .sold-out-label {
+      color: #dc2626;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    .sold-out-day-name {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .sold-out-day-name > span {
+      text-decoration-line: line-through;
+      text-decoration-style: double;
+    }
+
     .day-option:has(input:checked) {
       border-color: #1a5c38;
       background: #f0faf5;
@@ -419,9 +447,12 @@
         <p class="section-label">Dia do evento</p>
 
         <div class="day-options">
-          <label class="day-option">
-            <input type="radio" name="dia" value="sabado">
-            <span>Sábado</span>
+          <label class="day-option day-option-sold-out">
+            <span class="sold-out-label" role="status">LOTADO</span>
+            <span class="sold-out-day-name">
+              <input type="radio" name="dia" value="sabado" disabled aria-label="Sábado, lotado">
+              <span>Sábado</span>
+            </span>
           </label>
           <label class="day-option">
             <input type="radio" name="dia" value="domingo">
