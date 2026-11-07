@@ -23,6 +23,7 @@ var FORMAS_PAGAMENTO = {
 };
 
 var DIAS_LABEL    = { sabado: 'Sábado',  domingo: 'Domingo' };
+var DIAS_FECHADOS = { sabado: true, domingo: false };
 var PREFIXOS_DIA  = { sabado: 'FGI_S_',  domingo: 'FGI_D_' };
 var COL_DIA       = 11;
 var COL_CODIGO    = 12;
@@ -65,6 +66,9 @@ function doPost(e) {
     var diaKey = classificarDia_(data.dia);
     if (!diaKey) {
       return jsonResponse({ status: 'error', message: 'Escolha em qual dia da festa você vai (Sábado ou Domingo).' });
+    }
+    if (DIAS_FECHADOS[diaKey]) {
+      return jsonResponse({ status: 'error', message: 'As vendas para sábado estão encerradas. Selecione domingo.' });
     }
 
     var adultos   = toQty(data.adultos);
