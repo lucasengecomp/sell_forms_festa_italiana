@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ingressos — Festa da Gastronomia Italiana 2026 | Mariapolis Ginetta</title>
+  <title>Obrigado — Festa da Gastronomia Italiana | Mariapolis Ginetta</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -48,6 +48,91 @@
     .body {
       padding: 1.75rem;
     }
+
+    .closing-message {
+      padding: .5rem 0;
+      text-align: center;
+    }
+
+    .closing-message .eyebrow {
+      margin-bottom: .75rem;
+      color: #1a5c38;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .closing-message h2 {
+      margin-bottom: .875rem;
+      color: #1a5c38;
+      font-size: 1.5rem;
+      line-height: 1.25;
+    }
+
+    .closing-message p {
+      margin-bottom: .875rem;
+      color: #4b5563;
+      font-size: .975rem;
+      line-height: 1.6;
+    }
+
+    .whatsapp-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-top: .5rem;
+      padding: .875rem 1rem;
+      border-radius: 10px;
+      background: #1a5c38;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: background .15s, transform .1s;
+    }
+
+    .whatsapp-button:hover { background: #155030; }
+    .whatsapp-button:active { transform: scale(.98); }
+    .whatsapp-button:focus-visible { outline: 3px solid #6bba8a; outline-offset: 3px; }
+
+    .official-channels {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .official-channels h3 {
+      margin-bottom: .5rem;
+      color: #1a5c38;
+      font-size: 1rem;
+    }
+
+    .official-channels p {
+      margin-bottom: .875rem;
+      color: #6b7280;
+      font-size: .875rem;
+      line-height: 1.5;
+    }
+
+    .channel-link {
+      display: block;
+      margin-top: .5rem;
+      padding: .75rem 1rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      color: #1a5c38;
+      font-size: .9rem;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+
+    .channel-link:hover { background: #f0faf5; border-color: #1a5c38; }
+    .channel-link:focus-visible { outline: 3px solid #6bba8a; outline-offset: 3px; }
 
     .section-label {
       font-size: .7rem;
@@ -422,12 +507,32 @@
   <div class="card">
     <div class="header">
       <h1>Festa da Gastronomia Italiana 2026</h1>
-      <p>Mariapolis Ginetta &mdash; Venda de ingressos</p>
+      <p>Mariapolis Ginetta &mdash; Até breve!</p>
     </div>
 
     <div class="body">
-      <form id="inscricao" novalidate>
+      <main class="closing-message" aria-labelledby="closing-title">
+        <p class="eyebrow">Evento encerrado</p>
+        <h2 id="closing-title">Muito obrigado!</h2>
+        <p>Agradecemos a todos que participaram e fizeram parte da Festa da Gastronomia Italiana 2026.</p>
+        <p>Até breve! Esperamos encontrar você na festa de 2027.</p>
+        <a
+          class="whatsapp-button"
+          id="whatsapp-contact"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Fale com a equipe pelo WhatsApp</a>
+        <p>Para agradecer, tirar dúvidas ou enviar sugestões.</p>
+        <section class="official-channels" aria-labelledby="channels-title">
+          <h3 id="channels-title">Acompanhe a Mariápolis Ginetta</h3>
+          <p>Conheça nossos canais oficiais e fique por dentro das novidades.</p>
+          <a class="channel-link" href="https://www.mariapolisginetta.org/" target="_blank" rel="noopener noreferrer">Site oficial</a>
+          <a class="channel-link" href="https://www.instagram.com/mariapolisginetta/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </section>
+      </main>
 
+      <form id="inscricao" novalidate hidden>
         <p class="section-label">Seus dados</p>
 
         <div class="field">
@@ -565,6 +670,11 @@
   </div>
 
   <script src="config.js?v=7"></script>
+  <script>
+    document.getElementById('whatsapp-contact').href =
+      'https://wa.me/' + WA_NUMBER + '?text=' +
+      encodeURIComponent('Olá! Gostaria de agradecer, tirar uma dúvida ou enviar uma sugestão sobre a Festa da Gastronomia Italiana.');
+  </script>
   <script>
     // ── Configuração ─────────────────────────────────────────────────────────
     var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr9zmPOw-jemxDtZ0UFNcP5sskT1vjFQ1Hm456KRV6TYbghies6M_3E2FLYyAKWNmIKg/exec';
